@@ -1,7 +1,8 @@
 path = require('path');
 var http = require('http');
 var fs = require('fs');
- 
+var jade = require('jade');
+
 var MIME_TYPES = {
     'css': 'text/css',
     'gif': 'image/gif',
@@ -18,9 +19,9 @@ var MIME_TYPES = {
  
 var options = {
     host: 'localhost',
-    port: 8080,
+    port: (process.env.PORT || 3000),
     index: 'index.html',
-    docroot: '.'
+    docroot: process.env.HOME + '/public_html'
 };
  
 var get_mime = function(filename) {
