@@ -44,6 +44,7 @@ path = require('path');
 var http = require('http');
 var fs = require('fs');
 var jade = require('jade');
+var qs = require('querystring');
 
 var page404 = "<!doctype html><html><head>\
 <title>Uh oh!</title>\
@@ -107,6 +108,7 @@ var respond = function(request, response, status, content, content_type) {
 };
  
 var serve_file = function(request, response, requestpath) {
+
     return fs.readFile(requestpath, function(error, content) {
         if (error != null) {
             console.error("ERROR: Encountered error while processing " +
