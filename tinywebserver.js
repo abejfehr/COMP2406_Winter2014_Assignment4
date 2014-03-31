@@ -107,7 +107,9 @@ var respond = function(request, response, status, content, content_type) {
     return response.end();
 };
  
-var serve_file = function(request, response, requestpath) {
+var serve_file = function(request, response, requestpath, params) {
+
+    console.log(params);
 
     return fs.readFile(requestpath, function(error, content) {
         if (error != null) {
@@ -117,7 +119,7 @@ var serve_file = function(request, response, requestpath) {
             return respond(request, response, 500);
         } else {
             if(requestpath.indexOf(".jade") > 0) {
-                jade.render(content, function(err, html) {
+                jade.render(content, params, function(err, html) {
                     if(err) throw err;
                     return respond(request, response, 200, html, "text/html");
                 });
@@ -130,7 +132,6 @@ var serve_file = function(request, response, requestpath) {
  
  
 var return_index = function(request, response, requestpath)  {
- 
     var exists_callback = function(file_exists) {
         if (file_exists) {
             return serve_file(request, response, requestpath);
@@ -156,21 +157,27 @@ var request_handler = function(request, response) {
         return respond(request, response, 403);
     } else {
         requestpath = path.normalize(path.join(options.docroot, request.url));
-        return fs.exists(requestpath, function(file_exists) {
+        
+        //break the request path into the actual file path and the querystring
+        var filepath = requestpath.split('?')[0];
+        var querystring = requestpath.split('?')[1];
+        var params = qs.parse(querystring);
+        
+        return fs.exists(filepath, function(file_exists) {
             if (file_exists) {
-                return fs.stat(requestpath, function(err, stat) {
+                return fs.stat(filepath, function(err, stat) {
                     if (err != null) {
                         console.error("ERROR: Encountered error calling" +
-                                      "fs.stat on \"" + requestpath + 
+                                      "fs.stat on \"" + filepath + 
                                       "\" while processing " + 
                                       request.method + " of \"" + 
                                       request.url + "\".", err);
                         return respond(request, response, 500);
                     } else {
                         if ((stat != null) && stat.isDirectory()) {
-                            return return_index(request, response, requestpath);
+                            return return_index(request, response, filepath);
                         } else {
-                            return serve_file(request, response, requestpath);
+                            return serve_file(request, response, filepath, params);
                         }
                     }
                 });
