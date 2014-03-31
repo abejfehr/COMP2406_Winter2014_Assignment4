@@ -1,7 +1,58 @@
+// tinywebserver.js
+// file configuration by Abe Fehr #100908743 for COMP2406 W14 A4
+//
+// A modification of Rod Waldhoff's tiny node.js webserver
+// original written in coffeescript
+// simplified and made more native-ish by Anil Somayaji
+// March 19, 2014
+//
+// original headers of coffeescript version:
+//
+// A simple static-file web server implemented as a stand-alone
+// Node.js/CoffeeScript app.
+//---------------------------------------------------------------------
+// For more information, see:
+// <https://github.com/rodw/tiny-node.js-webserver>
+//---------------------------------------------------------------------
+// This program is distributed under the "MIT License".
+// (See <http://www.opensource.org/licenses/mit-license.php>.)
+//---------------------------------------------------------------------
+// Copyright (c) 2012 Rodney Waldhoff
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//---------------------------------------------------------------------
+
 path = require('path');
 var http = require('http');
 var fs = require('fs');
 var jade = require('jade');
+
+var page404 = "<!doctype html><html><head>\
+<title>Uh oh!</title>\
+<link href='http://fonts.googleapis.com/css?family=Gafata' rel='stylesheet' type='text/css'>\
+</head>\
+<body style=\"color:#3D3D3D;\"><h1 style=\"margin:0px auto; text-align:center; font-family: 'Gafata', sans-serif;margin:15px\">A 404 error occurred :(</h1>\
+<p style=\"margin:0px auto; text-align:center;font-family: 'Gafata', sans-serif;\">Somewhere out there, a small seagull is crying for you</p>\
+<div style=\"margin:0px auto\"><img style=\"margin:0px auto;display:block;\" src=\"https://dl.dropboxusercontent.com/u/1330689/sadgull.png\" /></div>\
+</body></html>"
 
 var MIME_TYPES = {
     'css': 'text/css',
@@ -63,6 +114,12 @@ var serve_file = function(request, response, requestpath) {
                           "\".", error);
             return respond(request, response, 500);
         } else {
+            if(requestpath.indexOf(".jade") > 0) {
+                jade.render(content, function(err, html) {
+                    if(err) throw err;
+                    return respond(request, response, 200, html, "text/html");
+                });
+            }
             return respond(request, response, 200, 
                            content, get_mime(requestpath));
         }
@@ -76,7 +133,7 @@ var return_index = function(request, response, requestpath)  {
         if (file_exists) {
             return serve_file(request, response, requestpath);
         } else {
-            return respond(request, response, 404);
+            return respond(request, response, 404, page404, "text/html");
         }
     }
  
@@ -116,7 +173,7 @@ var request_handler = function(request, response) {
                     }
                 });
             } else {
-                return respond(request, response, 404);
+                return respond(request, response, 404, page404, "text/html");
             }
         });
     }
