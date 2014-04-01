@@ -68,14 +68,14 @@ var MIME_TYPES = {
     'png': 'image/png',
     'txt': 'text/text'
 };
- 
+
 var options = {
     host: 'localhost',
     port: (process.env.PORT || 3000),
     indices: ['index.html', 'index.jade'],
     docroot: process.env.HOME + '/public_html'
 };
- 
+
 var get_mime = function(filename) {
     var ext, type;
     for (ext in MIME_TYPES) {
@@ -86,13 +86,13 @@ var get_mime = function(filename) {
     }
     return null;
 };
- 
- 
+
+
 var respond = function(request, response, status, content, content_type) {
     if (!status) {
         status = 200;
     }
- 
+
     if (!content_type) {
         content_type = 'text/plain';
     }
@@ -106,13 +106,13 @@ var respond = function(request, response, status, content, content_type) {
     }
     return response.end();
 };
- 
+
 var serve_file = function(request, response, requestpath, params) {
 
     return fs.readFile(requestpath, function(error, content) {
         if (error != null) {
             console.error("ERROR: Encountered error while processing " +
-                          request.method + " of \"" + request.url + 
+                          request.method + " of \"" + request.url +
                           "\".", error);
             return respond(request, response, 500);
         } else {
@@ -122,57 +122,57 @@ var serve_file = function(request, response, requestpath, params) {
                     return respond(request, response, 200, html, "text/html");
                 });
             }
-            return respond(request, response, 200, 
+            return respond(request, response, 200,
                            content, get_mime(requestpath));
         }
     });
 };
- 
- 
-var return_index = function(request, response, requestpath)  {
 
-    if (requestpath.substr(-1) !== '/') {
-        requestpath += "/";
+
+var return_index = function(request, response, filepath, params)  {
+
+    if (filepath.substr(-1) !== '/') {
+        filepath += "/";
     }
-    var dirpath = requestpath;
+    var dirpath = filepath;
     for(var i=0;i<options.indices.length;++i) {
-        requestpath = dirpath + options.indices[i];
-        if(fs.existsSync(requestpath)) {
-            return serve_file(request, response, requestpath)
+        filepath = dirpath + options.indices[i];
+        if(fs.existsSync(filepath)) {
+            return serve_file(request, response, filepath, params)
         }
     }
     return respond(request, response, 404, page404, "text/html");
 }
- 
+
 var request_handler = function(request, response) {
     var requestpath;
- 
+
     if (request.url.match(/((\.|%2E|%2e)(\.|%2E|%2e))|(~|%7E|%7e)/) != null) {
         console.warn("WARNING: " + request.method +
-                     " of \"" + request.url + 
+                     " of \"" + request.url +
                      "\" rejected as insecure.");
         return respond(request, response, 403);
     } else {
         requestpath = path.normalize(path.join(options.docroot, request.url));
-        
+
         //break the request path into the actual file path and the querystring
         var filepath = requestpath.split('?')[0];
         var querystring = requestpath.split('?')[1];
         var params = qs.parse(querystring);
-        
+
         return fs.exists(filepath, function(file_exists) {
             if (file_exists) {
                 return fs.stat(filepath, function(err, stat) {
                     if (err != null) {
                         console.error("ERROR: Encountered error calling" +
-                                      "fs.stat on \"" + filepath + 
-                                      "\" while processing " + 
-                                      request.method + " of \"" + 
+                                      "fs.stat on \"" + filepath +
+                                      "\" while processing " +
+                                      request.method + " of \"" +
                                       request.url + "\".", err);
                         return respond(request, response, 500);
                     } else {
                         if ((stat != null) && stat.isDirectory()) {
-                            return return_index(request, response, filepath);
+                            return return_index(request, response, filepath, params);
                         } else {
                             return serve_file(request, response, filepath, params);
                         }
@@ -184,9 +184,9 @@ var request_handler = function(request, response) {
         });
     }
 };
- 
+
 var server = http.createServer(request_handler);
- 
+
 server.listen(options.port, options.host, function() {
     return console.log("Server listening at http://" +
                        options.host + ":" + options.port + "/");
