@@ -109,8 +109,6 @@ var respond = function(request, response, status, content, content_type) {
  
 var serve_file = function(request, response, requestpath, params) {
 
-    console.log(params);
-
     return fs.readFile(requestpath, function(error, content) {
         if (error != null) {
             console.error("ERROR: Encountered error while processing " +
