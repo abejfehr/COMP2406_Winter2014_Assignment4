@@ -72,7 +72,7 @@ var MIME_TYPES = {
 var options = {
     host: 'localhost',
     port: (process.env.PORT || 3000),
-    index: 'index.html',
+    indices: ['index.html', 'index.jade'],
     docroot: process.env.HOME + '/public_html'
 };
  
@@ -130,19 +130,19 @@ var serve_file = function(request, response, requestpath, params) {
  
  
 var return_index = function(request, response, requestpath)  {
-    var exists_callback = function(file_exists) {
-        if (file_exists) {
-            return serve_file(request, response, requestpath);
-        } else {
-            return respond(request, response, 404, page404, "text/html");
-        }
-    }
- 
+
     if (requestpath.substr(-1) !== '/') {
         requestpath += "/";
     }
-    requestpath += options.index;
-    return fs.exists(requestpath, exists_callback);
+    var dirpath = requestpath;
+    for(var i=0;i<options.indices.length;++i) {
+        requestpath = dirpath + options.indices[i];
+        console.log("this is the rpath: " + requestpath);
+        if(fs.existsSync(requestpath)) {
+            return serve_file(request, response, requestpath)
+        }
+    }
+    return respond(request, response, 404, page404, "text/html");
 }
  
 var request_handler = function(request, response) {
