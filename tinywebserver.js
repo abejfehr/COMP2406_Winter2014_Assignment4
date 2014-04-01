@@ -137,7 +137,6 @@ var return_index = function(request, response, requestpath)  {
     var dirpath = requestpath;
     for(var i=0;i<options.indices.length;++i) {
         requestpath = dirpath + options.indices[i];
-        console.log("this is the rpath: " + requestpath);
         if(fs.existsSync(requestpath)) {
             return serve_file(request, response, requestpath)
         }
