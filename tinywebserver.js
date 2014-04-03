@@ -46,15 +46,6 @@ var fs = require('fs');
 var jade = require('jade');
 var qs = require('querystring');
 
-var page404 = "<!doctype html><html><head>\
-<title>Uh oh!</title>\
-<link href='http://fonts.googleapis.com/css?family=Gafata' rel='stylesheet' type='text/css'>\
-</head>\
-<body style=\"color:#3D3D3D;\"><h1 style=\"margin:0px auto; text-align:center; font-family: 'Gafata', sans-serif;margin:15px\">A 404 error occurred :(</h1>\
-<p style=\"margin:0px auto; text-align:center;font-family: 'Gafata', sans-serif;\">Somewhere out there, a small seagull is crying for you</p>\
-<div style=\"margin:0px auto\"><img style=\"margin:0px auto;display:block;\" src=\"https://dl.dropboxusercontent.com/u/1330689/sadgull.png\" /></div>\
-</body></html>"
-
 var MIME_TYPES = {
     'css': 'text/css',
     'gif': 'image/gif',
@@ -91,6 +82,10 @@ var get_mime = function(filename) {
 var respond = function(request, response, status, content, content_type) {
     if (!status) {
         status = 200;
+    }
+    else if(status == 404) {
+        content_type = "text/html";
+        content = fs.readFileSync('404.html');
     }
 
     if (!content_type) {
@@ -141,7 +136,7 @@ var return_index = function(request, response, filepath, params)  {
             return serve_file(request, response, filepath, params)
         }
     }
-    return respond(request, response, 404, page404, "text/html");
+    return respond(request, response, 404);
 }
 
 var request_handler = function(request, response) {
@@ -179,7 +174,7 @@ var request_handler = function(request, response) {
                     }
                 });
             } else {
-                return respond(request, response, 404, page404, "text/html");
+                return respond(request, response, 404);
             }
         });
     }
